@@ -9,11 +9,11 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('sc_token')
+    const token = localStorage.getItem('v2_token')
     if (token) {
       authAPI.profile()
         .then(setUser)
-        .catch(() => localStorage.removeItem('sc_token'))
+        .catch(() => localStorage.removeItem('v2_token'))
         .finally(() => setLoading(false))
     } else {
       setLoading(false)
@@ -22,18 +22,19 @@ export function AuthProvider({ children }) {
 
   const login = async (credentials) => {
     const { token, user } = await authAPI.login(credentials)
-    localStorage.setItem('sc_token', token)
+    localStorage.setItem('v2_token', token)
     setUser(user)
   }
 
   const signup = async (data) => {
     const { token, user } = await authAPI.signup(data)
-    localStorage.setItem('sc_token', token)
+    localStorage.setItem('v2_token', token)
     setUser(user)
   }
 
-  const logout = () => {
-    localStorage.removeItem('sc_token')
+  const logout = async () => {
+    await authAPI.logout()
+    localStorage.removeItem('v2_token')
     setUser(null)
   }
 
