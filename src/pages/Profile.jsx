@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { profileAPI } from '../services/api'
 import AyurvedaTips from '../components/AyurvedaTips'
@@ -16,8 +16,63 @@ export default function Profile() {
   const [editForm, setEditForm] = useState({})
   
   // States for Extra Features
-  const [activeTab, setActiveTab] = useState('profile') // 'profile', 'community', 'ayurveda'
+  const [activeTab, setActiveTab] = useState('profile')
   const [selectedDisease, setSelectedDisease] = useState(null)
+
+  // Medical Report Scanner
+  const [scanResult, setScanResult] = useState(null)
+  const [scanLoading, setScanLoading] = useState(false)
+  const scanInputRef = useRef(null)
+
+  const handleScanReport = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setScanLoading(true);
+    setScanResult(null);
+
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+    if (apiKey && apiKey !== 'your_api_key_here') {
+      try {
+        // Convert image to base64
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+          const base64 = reader.result.split(',')[1];
+          const mimeType = file.type;
+
+          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  { text: 'You are a medical AI. Analyze this medical report image and provide a clear, concise summary of the key findings, any abnormal values, and simple recommendations in plain language a patient can understand. Keep it under 150 words.' },
+                  { inline_data: { mime_type: mimeType, data: base64 } }
+                ]
+              }]
+            })
+          });
+
+          const json = await response.json();
+          if (json.candidates?.[0]) {
+            setScanResult(json.candidates[0].content.parts[0].text);
+          } else {
+            setScanResult('Could not analyze the report. Please try a clearer image.');
+          }
+          setScanLoading(false);
+        };
+      } catch (err) {
+        setScanResult('Error analyzing report: ' + err.message);
+        setScanLoading(false);
+      }
+    } else {
+      // Mock fallback
+      await new Promise(r => setTimeout(r, 2000));
+      setScanResult('📋 Mock Scan Result:\n\nReport analyzed successfully. Key findings:\n• Blood Sugar (Fasting): 112 mg/dL — Slightly elevated, monitor diet\n• Hemoglobin: 13.2 g/dL — Normal range\n• Blood Pressure: 128/84 mmHg — Borderline, reduce salt intake\n\n💡 Recommendation: Schedule a follow-up with your doctor within 2 weeks. Maintain a low-sugar, low-sodium diet and continue daily walks.');
+      setScanLoading(false);
+    }
+  };
 
   useEffect(() => {
     Promise.all([
@@ -174,13 +229,29 @@ export default function Profile() {
 
           {/* Action Buttons */}
           <div className={`${styles.bottomActions} fade-up`}>
-            <button className={styles.docScanBtn}>
-              <span className={styles.aIcon}>📄</span> Scan Medical Report
+            <input
+              type="file"
+              accept="image/*,application/pdf"
+              ref={scanInputRef}
+              style={{ display: 'none' }}
+              onChange={handleScanReport}
+            />
+            <button className={styles.docScanBtn} onClick={() => scanInputRef.current.click()} disabled={scanLoading}>
+              <span className={styles.aIcon}>📄</span>
+              {scanLoading ? 'Analyzing...' : 'Scan Medical Report'}
             </button>
             <button className={styles.logoutBtn} onClick={logout}>
               Log Out
             </button>
           </div>
+
+          {/* Scan Result */}
+          {scanResult && (
+            <div className={`${styles.sectionBlock} fade-up`} style={{ background: '#f0f9ff', border: '1px solid #bae6fd', marginTop: 16 }}>
+              <h3 className={styles.blockTitle}>🧾 AI Medical Report Analysis</h3>
+              <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.7, color: '#1e293b', fontSize: '0.95rem' }}>{scanResult}</p>
+            </div>
+          )}
 
           {/* Real-time Features Tabs */}
           <div className={`${styles.sectionBlock} fade-up`} style={{ marginTop: '30px', padding: '10px', background: 'transparent', border: 'none', boxShadow: 'none' }}>
