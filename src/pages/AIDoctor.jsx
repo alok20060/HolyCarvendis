@@ -46,7 +46,9 @@ export default function AIDoctor() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        try { await videoRef.current.play(); } catch(e) {}
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current.play().catch(e => console.error("Video play blocked:", e));
+        };
         setCameraActive(true);
         drawOpenCVMock();
       }
@@ -112,16 +114,26 @@ export default function AIDoctor() {
   const handleUserMessage = async (msg) => {
     setIsSpeaking(true);
     setResponse("Thinking...");
+    
+    // Warm up speech synthesis on Safari synchronously if possible
+    window.speechSynthesis.resume();
+    
     const { reply } = await chatbotAPI.sendMessage(msg, {}, language);
     setResponse(reply);
     
-    const utterance = new SpeechSynthesisUtterance(reply);
+    const utterance = new SpeechSynthesisUtterance(reply || "I am sorry, I could not process that.");
     utterance.lang = language;
     utterance.pitch = 1;
     utterance.rate = 1;
-    utterance.onend = () => setIsSpeaking(false);
     
-    // Pick a female voice if available
+    // Fallback timer if onend fails to fire (common Safari/Chrome TTS bug)
+    const fallbackTimer = setTimeout(() => setIsSpeaking(false), 8000);
+    
+    utterance.onend = () => {
+      clearTimeout(fallbackTimer);
+      setIsSpeaking(false);
+    };
+    
     const voices = window.speechSynthesis.getVoices();
     const femaleVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Google UK English Female'));
     if (femaleVoice) utterance.voice = femaleVoice;
@@ -136,9 +148,9 @@ export default function AIDoctor() {
 
       <div className={styles.doctorContainer}>
         <div className={styles.visuals}>
-          <div className={styles.videoWrapper}>
-            <video ref={videoRef} autoPlay playsInline muted className={styles.videoElement} style={{ opacity: cameraActive ? 1 : 0, position: 'absolute', width: '100%', height: '100%', objectFit: 'cover' }}></video>
-            <canvas ref={canvasRef} width="300" height="300" className={styles.canvasOverlay} style={{ display: cameraActive ? 'block' : 'none' }}></canvas>
+          <div className={styles.videoWrapper} style={{ backgroundColor: '#000' }}>
+            <video ref={videoRef} autoPlay playsInline muted className={styles.videoElement} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: cameraActive ? 1 : 0, position: 'absolute' }}></video>
+            <canvas ref={canvasRef} width="300" height="300" className={styles.canvasOverlay} style={{ display: cameraActive ? 'block' : 'none', zIndex: 10 }}></canvas>
             {!cameraActive && (
               <div className={styles.cameraPlaceholder} style={{ zIndex: 2 }}>
                 <span style={{ fontSize: '3rem' }}>📷</span>
