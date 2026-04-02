@@ -69,7 +69,7 @@ export default function Login() {
         <p className={styles.sub}>Sign in to your health dashboard</p>
 
         <div style={{ marginBottom: '20px' }}>
-          <p className={styles.sub}>Demo Mode active: Any username/password works.</p>
+          <p className={styles.sub}>Use any username and password <strong>000000</strong> to login.</p>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>

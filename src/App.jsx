@@ -37,11 +37,7 @@ function PrivateRoute({ children }) {
 
   if (!user) return <Navigate to="/login" replace />;
 
-  // Enforce onboarding completion if user is logged in
-  if (user && !user.onboardingComplete) {
-    return <Navigate to="/onboarding/terms" replace />;
-  }
-
+  // Onboarding skipped for hackathon demo — go straight to dashboard
   return children;
 }
 

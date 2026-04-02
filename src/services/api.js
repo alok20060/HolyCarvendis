@@ -143,10 +143,9 @@ export const authAPI = {
       let { data: authData, error } = await supabase.auth.signInWithPassword({ email: proxyEmail, password: proxyPass });
       
       if (error && (error.message || error.status === 400 || error.status === 429)) {
-        // Create user on-the-fly even if rate limited or invalid
         console.warn("HACKATHON MODE: Bypassing Supabase for demo...");
         localStorage.setItem('v2_token', 'demo_token_' + Date.now());
-        userProfile = { ...userProfile, name: 'Guest Patient', phone: data.phone, onboardingComplete: false };
+        userProfile = { ...userProfile, name: 'Guest Patient', phone: data.phone, onboardingComplete: true };
         setStorage('v2_profile', userProfile);
         return { token: 'demo_token', user: userProfile };
       }
@@ -159,10 +158,9 @@ export const authAPI = {
       let { data: authData, error } = await supabase.auth.signInWithPassword({ email: demoEmail, password: 'SecurePhoneMock123!' });
       
       if (error && (error.message || error.status === 400 || error.status === 429)) {
-         // Create local guest session if Supabase fails
          console.warn("HACKATHON MODE: Bypassing Supabase for demo...");
          localStorage.setItem('v2_token', 'demo_token_' + Date.now());
-         userProfile = { ...userProfile, name: data.email, email: demoEmail, onboardingComplete: false };
+         userProfile = { ...userProfile, name: data.email, email: demoEmail, onboardingComplete: true };
          setStorage('v2_profile', userProfile);
          return { token: 'demo_token', user: userProfile };
       }
