@@ -73,6 +73,18 @@ export default function Login() {
           <button type="button" onClick={() => setLoginMethod('phone')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ccc', background: loginMethod === 'phone' ? '#e0e7ff' : '#fff', color: loginMethod === 'phone' ? '#5B6EF5' : '#333' }}>Phone OTP</button>
         </div>
 
+        <button 
+          className={styles.btn} 
+          style={{ background: '#fff', color: '#333', border: '1px solid #eee', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
+          onClick={() => {
+            setForm({ email: 'guest@swastya-demo.ai', password: '000000' });
+            setTimeout(() => handleSubmit({ preventDefault: () => {} }), 100);
+          }}
+        >
+          <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Logo.svg" width="18" alt="Google" />
+          Sign in with Google (Demo)
+        </button>
+
         {loginMethod === 'email' ? (
           <form onSubmit={handleSubmit} className={styles.form}>
             <div className={styles.field}>
