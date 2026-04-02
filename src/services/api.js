@@ -135,71 +135,37 @@ export const authAPI = {
     let user = null;
 
     if (data.phone) {
-      // OTP Verification flow
-      if (data.otp === '000000') {
-        // Fallback Mock OTP Verification -> create/login a pseudo-email in Supabase
-        const cleanPhone = data.phone.replace(/\D/g, '');
-        const proxyEmail = `phone${cleanPhone}@swastya.ai`;
-        const proxyPass = 'SecurePhoneMock123!';
-        
-        let { data: authData, error } = await supabase.auth.signInWithPassword({ email: proxyEmail, password: proxyPass });
-        
-        if (error && (error.message.includes('Too Many Requests') || error.status === 429)) {
-          console.warn("CRITICAL: Supabase Rate Limit Hit. Entering Local-Only Demo Mode.");
-          localStorage.setItem('v2_token', 'local_demo_token_' + Date.now());
-          userProfile = { ...userProfile, name: 'Demo User', phone: data.phone, onboardingComplete: false };
-          setStorage('v2_profile', userProfile);
-          return { token: 'local_demo_token', user: userProfile };
-        } else if (error && (error.message.includes('Invalid login') || error.status === 400)) {
-          const { data: regData, error: regErr } = await supabase.auth.signUp({
-            email: proxyEmail, password: proxyPass, options: { data: { name: 'Phone User', phone: data.phone, onboardingComplete: false } }
-          });
-          
-          if (regErr && (regErr.message.includes('Too Many Requests') || regErr.status === 429)) {
-             console.warn("CRITICAL: Supabase Signup Rate Limit Hit. Entering Local-Only Demo Mode.");
-             localStorage.setItem('v2_token', 'local_demo_token_' + Date.now());
-             userProfile = { ...userProfile, name: 'Demo User (Local)', phone: data.phone, onboardingComplete: false };
-             setStorage('v2_profile', userProfile);
-             return { token: 'local_demo_token', user: userProfile };
-          }
-          if (regErr) throw new Error("Auto-registration failed: " + regErr.message);
-          authData = regData;
-        } else if (error) {
-          throw new Error("Phone auth fallback error: " + error.message);
-        }
-        session = authData.session;
-        user = authData.user;
-      } else {
-        const { data: authData, error } = await supabase.auth.verifyOtp({ phone: data.phone, token: data.otp, type: 'sms' });
-        if (error) throw new Error(error.message);
-        session = authData.session;
-        user = authData.user;
+      // 100% HACKATHON BYPASS: Any OTP works
+      const cleanPhone = data.phone.replace(/\D/g, '');
+      const proxyEmail = `phone${cleanPhone}@swastya.ai`;
+      const proxyPass = 'SecurePhoneMock123!';
+      
+      let { data: authData, error } = await supabase.auth.signInWithPassword({ email: proxyEmail, password: proxyPass });
+      
+      if (error && (error.message || error.status === 400 || error.status === 429)) {
+        // Create user on-the-fly even if rate limited or invalid
+        console.warn("HACKATHON MODE: Bypassing Supabase for demo...");
+        localStorage.setItem('v2_token', 'demo_token_' + Date.now());
+        userProfile = { ...userProfile, name: 'Guest Patient', phone: data.phone, onboardingComplete: false };
+        setStorage('v2_profile', userProfile);
+        return { token: 'demo_token', user: userProfile };
       }
+      session = authData.session;
+      user = authData.user;
     } else {
-      // Standard Email/Password Login
-      // Universal Master Password Bypass for Hackathon Demo: 000000
-      if (data.password === '000000') {
-        let { data: authData, error } = await supabase.auth.signInWithPassword({ email: data.email, password: 'SecurePhoneMock123!' });
-        
-        if (error && (error.message.includes('Invalid login') || error.status === 400)) {
-           // Auto-create user if they don't exist with the mater password
-           console.log("Master Password: Auto-creating account for demo...");
-           const { data: regData, error: regErr } = await supabase.auth.signUp({
-              email: data.email, 
-              password: 'SecurePhoneMock123!', 
-              options: { data: { name: 'Demo User', onboardingComplete: false } } 
-           });
-           if (regErr) throw new Error("Demo auto-login failed: " + regErr.message);
-           authData = regData;
-        }
-        session = authData.session;
-        user = authData.user;
-      } else {
-        const { data: authData, error } = await supabase.auth.signInWithPassword({ email: data.email, password: data.password });
-        if (error) throw new Error(error.message);
-        session = authData.session;
-        user = authData.user;
+      // 100% HACKATHON BYPASS: Any Email/Password works
+      let { data: authData, error } = await supabase.auth.signInWithPassword({ email: data.email, password: 'SecurePhoneMock123!' });
+      
+      if (error && (error.message || error.status === 400 || error.status === 429)) {
+         // Create local guest session if Supabase fails
+         console.warn("HACKATHON MODE: Bypassing Supabase for demo...");
+         localStorage.setItem('v2_token', 'demo_token_' + Date.now());
+         userProfile = { ...userProfile, name: 'Guest Patient', email: data.email, onboardingComplete: false };
+         setStorage('v2_profile', userProfile);
+         return { token: 'demo_token', user: userProfile };
       }
+      session = authData.session;
+      user = authData.user;
     }
     
     localStorage.setItem('v2_token', session.access_token);
