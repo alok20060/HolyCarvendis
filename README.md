@@ -57,7 +57,7 @@ VITE_API_URL=/api   # or https://your-backend.com/api
 ```bash
 npm run dev
 ```
-App runs at **http://localhost:5173**
+App runs at **https://holy-carvendis.vercel.app/login**
 
 ### 4. Build for production
 ```bash
