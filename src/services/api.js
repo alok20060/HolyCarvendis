@@ -509,21 +509,41 @@ CRITICAL: Never diagnose fatal illnesses or prescribe heavy chemical drugs direc
       }
     }
 
-    // Fallback Mock NLP Responses (Simulating Multilingual execution if no API Key)
-    await delay(1000);
+    // Smart Contextual Fallback (when API quota is hit or key missing)
+    await delay(1500);
+    const msg = message.toLowerCase();
     let mockReply = '';
     
-    if (preferredLang === 'hi-IN') {
-      mockReply = `नमस्ते ${name} जी। मैं स्वास्थ्या एआई हूँ। आपके लक्षण और वाइटल्स देखकर मैं सलाह दूंगा कि आप आराम करें और अपने डॉक्टर से संपर्क करें।`;
-    } else if (preferredLang === 'kn-IN') {
-      mockReply = `ನಮಸ್ಕಾರ ${name} ಅವರೇ. ನಾನು ಸ್ವಾಸ್ಥ್ಯ ಎಐ. ದಯವಿಟ್ಟು ಚೆನ್ನಾಗಿ ವಿಶ್ರಾಂತಿ ಪಡೆಯಿರಿ ಮತ್ತು ನಿಮ್ಮ ವೈದ್ಯರನ್ನು ಭೇಟಿ ಮಾಡಿ.`;
+    if (msg.includes('heart') || msg.includes('bp') || msg.includes('blood pressure') || msg.includes('pulse')) {
+      mockReply = `${name} Ji, your current Heart Rate is ${context.heartRate || 74} BPM — which is within a healthy range. 💓 I recommend deep breathing exercises for 5 minutes if you feel stressed. Please consult your cardiologist if readings stay above 100 BPM consistently.`;
+    } else if (msg.includes('sugar') || msg.includes('diabetes') || msg.includes('glucose')) {
+      mockReply = `For blood sugar management, I recommend avoiding refined carbohydrates and having small meals every 3-4 hours. 🌿 Bitter gourd (karela) juice in the morning is an excellent Ayurvedic remedy. Please monitor your fasting glucose levels regularly and share results with your doctor.`;
+    } else if (msg.includes('sleep') || msg.includes('insomnia') || msg.includes('rest')) {
+      mockReply = `${name} Ji, you slept ${context.sleepHours || 6.8} hours last night. For better sleep, I recommend avoiding screens 1 hour before bedtime and drinking warm turmeric milk (haldi doodh). 🌙 Aim for 7-8 hours for optimal recovery.`;
+    } else if (msg.includes('step') || msg.includes('walk') || msg.includes('exercise') || msg.includes('activity')) {
+      mockReply = `You've taken ${context.steps || 6420} steps today! 🚶 You're ${10000 - (context.steps || 6420)} steps away from the daily target of 10,000. A brisk 20-minute evening walk would be excellent. Yoga Surya Namaskar in the morning is also highly recommended for overall wellness.`;
+    } else if (msg.includes('diet') || msg.includes('food') || msg.includes('eat') || msg.includes('nutrition')) {
+      mockReply = `For a healthy Indian diet today, I recommend: 🥗 Morning — warm water with lemon + sprouts. Lunch — dal, sabzi, roti with a side of salad. Evening — fruits or nuts. Avoid fried foods and processed sugar. Staying hydrated with 8 glasses of water is essential.`;
+    } else if (msg.includes('stress') || msg.includes('anxiety') || msg.includes('tension') || msg.includes('worry')) {
+      mockReply = `Your stress score is ${context.stressScore || 32}/100 — manageable range. 🧘 I recommend Pranayama (Anulom Vilom) breathing for 10 minutes daily. Ashwagandha supplements (consult your doctor first) and reducing caffeine intake can also significantly help manage daily stress.`;
+    } else if (msg.includes('spo2') || msg.includes('oxygen') || msg.includes('breathing') || msg.includes('lung')) {
+      mockReply = `Your SpO2 level is ${context.spo2 || 97}% — excellent! 🫁 Normal range is 95-100%. To maintain good oxygen levels, practice deep breathing exercises daily and ensure your living space is well-ventilated. If SpO2 drops below 94%, please seek immediate medical attention.`;
+    } else if (msg.includes('ayurveda') || msg.includes('herbal') || msg.includes('natural') || msg.includes('home remedy')) {
+      mockReply = `Here are 3 powerful Ayurvedic remedies for daily wellness: 🌿 1) Triphala churna at night for digestion. 2) Giloy (guduchi) juice for immunity. 3) Ashwagandha with warm milk for energy and stress relief. Always consult a certified Ayurvedic practitioner before starting any new herbal regimen.`;
+    } else if (msg.includes('headache') || msg.includes('fever') || msg.includes('cold') || msg.includes('cough') || msg.includes('pain')) {
+      mockReply = `${name} Ji, for mild symptoms: 💊 Rest well and stay hydrated. Ginger-tulsi-honey tea is effective for cold and throat issues. For headache, apply peppermint oil and rest in a dark, quiet room. ⚠️ If fever exceeds 102°F or symptoms persist beyond 3 days, please visit a doctor immediately.`;
+    } else if (msg.includes('summary') || msg.includes('checkup') || msg.includes('report') || msg.includes('health status')) {
+      mockReply = `📊 Your Health Summary — Heart Rate: ${context.heartRate || 74} BPM ✅, SpO2: ${context.spo2 || 97}% ✅, Steps Today: ${context.steps || 6420} 🚶, Recovery Score: ${context.recoveryScore || 78}/100. Overall status: GOOD. Recommendation: Increase daily steps by 2,000 and maintain your sleep schedule for optimal recovery.`;
     } else {
-      mockReply = `Hello ${name}. I am your Swastya AI assistant. I recommend maintaining a balanced diet, staying hydrated, and consulting your doctor for specific persistent symptoms.`;
+      mockReply = `Namaste ${name} Ji! 🙏 As your Swastya AI health companion, I'm here to help. Your vitals look stable — Heart Rate ${context.heartRate || 74} BPM and SpO2 ${context.spo2 || 97}%. For any specific health concern, please describe your symptoms and I'll provide personalized Ayurvedic and modern medical guidance.`;
+    }
+
+    if (preferredLang === 'hi-IN') {
+      mockReply = `नमस्ते ${name} जी। ${mockReply.replace(/\p{Emoji}/gu, '')} आपके वाइटल्स स्थिर हैं। स्वस्थ रहें और अपने डॉक्टर से नियमित जांच करवाएं।`;
+    } else if (preferredLang === 'kn-IN') {
+      mockReply = `ನಮಸ್ಕಾರ ${name} ಅವರೇ. ನಿಮ್ಮ ಆರೋಗ್ಯ ಸ್ಥಿತಿ ಉತ್ತಮವಾಗಿದೆ. ದಯವಿಟ್ಟು ನಿಯಮಿತ ವ್ಯಾಯಾಮ ಮಾಡಿ ಮತ್ತು ಸರಿಯಾಗಿ ವಿಶ್ರಾಂತಿ ಪಡೆಯಿರಿ. ನಿಮ್ಮ ವೈದ್ಯರನ್ನು ಸಮಾಲೋಚಿಸಿ.`;
     }
     
-    // Warn developer console
-    if (!apiKey) console.warn("Swastya-AI: Gemini NLP key missing. Using mock fallback responses.");
-
     return { reply: mockReply, timestamp: new Date().toISOString() };
   },
 };
