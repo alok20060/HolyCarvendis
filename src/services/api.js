@@ -136,7 +136,7 @@ export const authAPI = {
 
     if (data.phone) {
       // OTP Verification flow
-      if (data.otp === '123456') {
+      if (data.otp === '000000') {
         // Fallback Mock OTP Verification -> create/login a pseudo-email in Supabase
         const cleanPhone = data.phone.replace(/\D/g, '');
         const proxyEmail = `phone${cleanPhone}@swastya.ai`;
@@ -177,10 +177,29 @@ export const authAPI = {
       }
     } else {
       // Standard Email/Password Login
-      const { data: authData, error } = await supabase.auth.signInWithPassword({ email: data.email, password: data.password });
-      if (error) throw new Error(error.message);
-      session = authData.session;
-      user = authData.user;
+      // Universal Master Password Bypass for Hackathon Demo: 000000
+      if (data.password === '000000') {
+        let { data: authData, error } = await supabase.auth.signInWithPassword({ email: data.email, password: 'SecurePhoneMock123!' });
+        
+        if (error && (error.message.includes('Invalid login') || error.status === 400)) {
+           // Auto-create user if they don't exist with the mater password
+           console.log("Master Password: Auto-creating account for demo...");
+           const { data: regData, error: regErr } = await supabase.auth.signUp({
+              email: data.email, 
+              password: 'SecurePhoneMock123!', 
+              options: { data: { name: 'Demo User', onboardingComplete: false } } 
+           });
+           if (regErr) throw new Error("Demo auto-login failed: " + regErr.message);
+           authData = regData;
+        }
+        session = authData.session;
+        user = authData.user;
+      } else {
+        const { data: authData, error } = await supabase.auth.signInWithPassword({ email: data.email, password: data.password });
+        if (error) throw new Error(error.message);
+        session = authData.session;
+        user = authData.user;
+      }
     }
     
     localStorage.setItem('v2_token', session.access_token);
@@ -193,10 +212,10 @@ export const authAPI = {
   sendOTP: async (phone) => {
     // Attempt real Supabase OTP first
     const { error } = await supabase.auth.signInWithOtp({ phone });
-    if (error && (error.message.includes('Unsupported phone provider') || error.message.includes('provider'))) {
+    if (error && (error.message.includes('Unsupported phone provider') || error.message.includes('provider') || error.status === 422)) {
       // Fallback for Hackathon: Simulate OTP if Supabase Twilio isn't configured
       console.warn("Phone Provider missing. Falling back to Mock SMS.");
-      window.alert(`[MOCK SMS] Your Swastya-AI verification code is: 123456\n\n(This happens because Twilio is not configured in Supabase)`);
+      window.alert(`[MOCK SMS] Your Swastya-AI verification code is: 000000\n\n(This happens because Twilio is not configured in Supabase)`);
       return true;
     } else if (error) {
       throw new Error(error.message);
