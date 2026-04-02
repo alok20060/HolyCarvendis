@@ -503,7 +503,7 @@ CRITICAL: Never diagnose fatal illnesses or prescribe heavy chemical drugs direc
 
     if (apiKey && apiKey !== 'your_api_key_here') {
       try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
