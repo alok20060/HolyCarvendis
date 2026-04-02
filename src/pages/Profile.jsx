@@ -30,9 +30,9 @@ export default function Profile() {
     setScanLoading(true);
     setScanResult(null);
 
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyBpDJ8O2uSceTergSF8gE62L9MbDIgbpjM';
 
-    if (apiKey && apiKey !== 'your_api_key_here') {
+    if (apiKey) {
       try {
         // Convert image to base64
         const reader = new FileReader();
