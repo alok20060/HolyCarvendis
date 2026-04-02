@@ -153,14 +153,16 @@ export const authAPI = {
       session = authData.session;
       user = authData.user;
     } else {
-      // 100% HACKATHON BYPASS: Any Email/Password works
-      let { data: authData, error } = await supabase.auth.signInWithPassword({ email: data.email, password: 'SecurePhoneMock123!' });
+      // 100% HACKATHON BYPASS: Any Account/Username works
+      const demoEmail = data.email.includes('@') ? data.email : `${data.email.replace(/\s/g, '').toLowerCase()}@demo.swastya.ai`;
+      
+      let { data: authData, error } = await supabase.auth.signInWithPassword({ email: demoEmail, password: 'SecurePhoneMock123!' });
       
       if (error && (error.message || error.status === 400 || error.status === 429)) {
          // Create local guest session if Supabase fails
          console.warn("HACKATHON MODE: Bypassing Supabase for demo...");
          localStorage.setItem('v2_token', 'demo_token_' + Date.now());
-         userProfile = { ...userProfile, name: 'Guest Patient', email: data.email, onboardingComplete: false };
+         userProfile = { ...userProfile, name: data.email, email: demoEmail, onboardingComplete: false };
          setStorage('v2_profile', userProfile);
          return { token: 'demo_token', user: userProfile };
       }

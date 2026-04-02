@@ -68,65 +68,38 @@ export default function Login() {
         <h2 className={styles.title} style={{ marginTop: '16px' }}>Welcome back</h2>
         <p className={styles.sub}>Sign in to your health dashboard</p>
 
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-          <button type="button" onClick={() => setLoginMethod('email')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ccc', background: loginMethod === 'email' ? '#e0e7ff' : '#fff', color: loginMethod === 'email' ? '#5B6EF5' : '#333' }}>Email</button>
-          <button type="button" onClick={() => setLoginMethod('phone')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ccc', background: loginMethod === 'phone' ? '#e0e7ff' : '#fff', color: loginMethod === 'phone' ? '#5B6EF5' : '#333' }}>Phone OTP</button>
+        <div style={{ marginBottom: '20px' }}>
+          <p className={styles.sub}>Demo Mode active: Any username/password works.</p>
         </div>
 
-        <button 
-          className={styles.btn} 
-          style={{ background: '#fff', color: '#333', border: '1px solid #eee', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
-          onClick={() => {
-            setForm({ email: 'guest@swastya-demo.ai', password: '000000' });
-            setTimeout(() => handleSubmit({ preventDefault: () => {} }), 100);
-          }}
-        >
-          <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Logo.svg" width="18" alt="Google" />
-          Sign in with Google (Demo)
-        </button>
-
-        {loginMethod === 'email' ? (
-          <form onSubmit={handleSubmit} className={styles.form}>
-            <div className={styles.field}>
-              <label>Email</label>
-              <input name="email" type="email" value={form.email}
-                onChange={handleChange} placeholder="you@example.com" required />
-            </div>
-            <div className={styles.field}>
-              <label>Password</label>
-              <input name="password" type="password" value={form.password}
-                onChange={handleChange} placeholder="••••••••" required />
-            </div>
-            {error && <p className={styles.error}>{error}</p>}
-            <button className={styles.btn} type="submit" disabled={loading}>
-              {loading ? 'Signing in…' : 'Sign In'}
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={otpSent ? handleSubmit : handleSendOTP} className={styles.form}>
-            <div className={styles.field}>
-              <label>Phone Number</label>
-              <input name="phone" type="tel" value={form.phone}
-                onChange={handleChange} placeholder="+91 9876543210" required disabled={otpSent} />
-            </div>
-            {otpSent && (
-              <div className={styles.field}>
-                <label>Enter 6-Digit OTP</label>
-                <input name="otp" type="text" value={form.otp}
-                  onChange={handleChange} placeholder="123456" required />
-              </div>
-            )}
-            {error && <p className={styles.error}>{error}</p>}
-            <button className={styles.btn} type="submit" disabled={loading}>
-              {loading ? 'Please wait…' : otpSent ? 'Verify & Login' : 'Send OTP'}
-            </button>
-            {otpSent && (
-              <button type="button" onClick={() => setOtpSent(false)} style={{ background: 'none', border: 'none', color: '#5B6EF5', marginTop: '10px', cursor: 'pointer' }}>
-                Change Phone Number
-              </button>
-            )}
-          </form>
-        )}
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.field}>
+            <label>Account Name / Username</label>
+            <input 
+              name="email" 
+              type="text" 
+              value={form.email}
+              onChange={handleChange} 
+              placeholder="Enter account name" 
+              required 
+            />
+          </div>
+          <div className={styles.field}>
+            <label>Password</label>
+            <input 
+              name="password" 
+              type="password" 
+              value={form.password}
+              onChange={handleChange} 
+              placeholder="••••••••" 
+              required 
+            />
+          </div>
+          {error && <p className={styles.error}>{error}</p>}
+          <button className={styles.btn} type="submit" disabled={loading}>
+            {loading ? 'Logging in…' : 'Log In'}
+          </button>
+        </form>
         <p className={styles.switch}>
           Don't have an account? <Link to="/signup">Sign up</Link>
         </p>
