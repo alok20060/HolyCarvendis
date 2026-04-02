@@ -512,11 +512,15 @@ CRITICAL: Never diagnose fatal illnesses or prescribe heavy chemical drugs direc
         });
         
         const json = await response.json();
+        if (json.error) {
+           console.error("Gemini API Error details:", json.error);
+           throw new Error(json.error.message || "API error");
+        }
         if (json.candidates && json.candidates[0]) {
           return { reply: json.candidates[0].content.parts[0].text, timestamp: new Date().toISOString() };
         }
       } catch (err) {
-        console.error("NLP Model Error:", err);
+        console.error("NLP Model Fetch Error:", err);
       }
     }
 
